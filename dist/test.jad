@@ -1,0 +1,8 @@
+MIDlet-1: MainScreen, , hello.MainScreen
+MIDlet-Jar-Size: 1939
+MIDlet-Jar-URL: test.jar
+MIDlet-Name: test
+MIDlet-Vendor: Vendor
+MIDlet-Version: 1.0
+MicroEdition-Configuration: CLDC-1.1
+MicroEdition-Profile: MIDP-2.0
