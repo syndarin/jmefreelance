@@ -13,12 +13,20 @@ import javax.microedition.midlet.*;
 public class MainScreen extends MIDlet {
 
     public void startApp() {
-        Display.getDisplay(this).setCurrent(new LoginForm());
+        setLoginPage();
     }
     
     public void pauseApp() {
     }
     
     public void destroyApp(boolean unconditional) {
+    }
+    
+    public void setLoginPage(){
+        Display.getDisplay(this).setCurrent(new LoginForm(this));
+    }
+    
+    public void setActionPage(){
+        Display.getDisplay(this).setCurrent(new ActionForm(this));
     }
 }
