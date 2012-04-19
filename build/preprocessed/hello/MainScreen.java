@@ -5,13 +5,15 @@
 package hello;
 
 import javax.microedition.lcdui.Display;
-import javax.microedition.midlet.*;
+import javax.microedition.midlet.MIDlet;
 
 /**
  * @author Syndarin
  */
 public class MainScreen extends MIDlet {
 
+    public final static String HOST="http://62.149.12.172:8084";
+    
     public void startApp() {
         setLoginPage();
     }
@@ -26,7 +28,7 @@ public class MainScreen extends MIDlet {
         Display.getDisplay(this).setCurrent(new LoginForm(this));
     }
     
-    public void setActionPage(){
-        Display.getDisplay(this).setCurrent(new ActionForm(this));
+    public void setActionPage(Session session){
+        Display.getDisplay(this).setCurrent(new ActionForm(this, session));
     }
 }

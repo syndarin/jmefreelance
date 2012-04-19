@@ -4,6 +4,8 @@
  */
 package hello;
 
+import com.exploringxml.xml.Node;
+import com.exploringxml.xml.Xparse;
 import java.io.*;
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
@@ -19,6 +21,7 @@ public class LoginForm extends Form implements CommandListener {
     private MainScreen root;
     private TextField login;
     private TextField password;
+    private StringItem statusLine;
 
     public LoginForm(MainScreen root) {
         super(title);
@@ -26,9 +29,11 @@ public class LoginForm extends Form implements CommandListener {
 
         login = new TextField("Login", "", 12, TextField.ANY);
         password = new TextField("Password", "", 12, TextField.ANY);
+        statusLine = new StringItem("", "");
 
         append(login);
         append(password);
+        append(statusLine);
 
         setCommandListener(this);
 
@@ -59,91 +64,59 @@ public class LoginForm extends Form implements CommandListener {
 
         XMLHelper helper = new XMLHelper();
         String xml = helper.generateXML("request", nodes, values);
-        
+
         try {
-            sendPostRequest(xml);
+            String response = sendPostRequest(xml);
+            Session session = parseServerResponse(response);
+
+            if (session.getStatus() != 1) {
+                statusLine.setText("Вы успешно авторизованы!");
+                root.setActionPage(session);
+            } else {
+                statusLine.setText("Неправильные учетные данные!");
+            }
+
         } catch (IOException ex) {
             ex.printStackTrace();
+            statusLine.setText("Ошибка связи с сервером!");
         }
-
     }
 
-//    private void sendAuthRequest(String xml) {
-//        HttpClient client = new DefaultHttpClient();
-//        HttpPost request = new HttpPost("http://62.149.12.172:8084");
-//        try {
-//            StringEntity entity = new StringEntity(xml, "text/xml", "utf-8");
-//            request.setEntity(entity);
-//            HttpResponse response = client.execute(request);
-//            HttpEntity answerEntity = response.getEntity();
-//            String answer = EntityUtils.toString(answerEntity, "windows-1251");
-//            System.out.println(answer);
-//        } catch (UnsupportedEncodingException ex) {
-//            ex.printStackTrace();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
+    private Session parseServerResponse(String rawXML) {
+        Session session = new Session();
+        Xparse parser = new Xparse();
 
-    private void sendPostRequest(String xml) throws IOException {
-        
-        DataInputStream dis = null;
-        DataOutputStream dos = null;
+        Node rootElement = parser.parse(rawXML);
 
-        //HttpConnection http = (HttpConnection) Connector.open("http://www.intercitypost.com", Connector.READ);
-        HttpConnection http = (HttpConnection) Connector.open("http://62.149.12.172:8084", Connector.READ_WRITE);
-        http.setRequestMethod(HttpConnection.GET);
-        http.setRequestProperty("Content-Type", "text/xml");
-        http.setRequestProperty("Content-length", "" + xml.getBytes().length);
-        http.setRequestProperty("User-Agent", "MobileClient");
+        Node rootNode = rootElement.find("response", new int[]{1});
 
-        dos = http.openDataOutputStream();
-        byte[] body = xml.getBytes();
-        for (int i = 0; i < body.length; i++) {
-            dos.write(body[i]);
+        Node statusNode = rootNode.find("status", new int[]{1});
+        String statusString = statusNode.getCharacters();
+        int status = Integer.parseInt(statusString);
+        session.setStatus(status);
+
+        if (status == 0) {
+
+            Node idKassiNode = rootNode.find("id_kassi", new int[]{1});
+            String idKassi = idKassiNode.getCharacters();
+            session.setIdKassi(idKassi);
+
+            Node sessionIdNode = rootNode.find("sessions", new int[]{1});
+            String sessionId = sessionIdNode.getCharacters();
+            session.setSessionHash(sessionId);
+
+            Node nameNode = rootNode.find("name", new int[]{1});
+            String name = nameNode.getCharacters();
+            session.setName(name);
+
         }
-        //dos.flush();
 
-        System.out.println("data writed");
-        System.out.println(""+http.getResponseCode());
-
-        StringBuffer responseMessage = new StringBuffer();
-        dis = http.openDataInputStream();
-        int ch;
-        while ((ch = dis.read()) != -1) {
-            responseMessage.append((char) ch);
-        }
-        
-        System.out.println(responseMessage.toString());
-
-        dis.close();        
-        dos.close();
-        http.close();
+        return session;
     }
 
-    private void sendRequest(String xml) throws IOException {
-        HttpConnection http = (HttpConnection) Connector.open("http://intercitypost.com");
-        //HttpConnection http = (HttpConnection) Connector.open("http://195.225.157.182:8090");
-        http.setRequestMethod(HttpConnection.GET);
-        http.setRequestProperty("Content-Type", "text/xml");
-        http.setRequestProperty("Content-length", "" + xml.getBytes().length);
-        http.setRequestProperty("User-Agent", "MobileClient");
+    private String sendPostRequest(String xml) throws IOException {
 
-        OutputStream out = http.openOutputStream();
-        out.write(xml.getBytes());
-        out.flush();
-
-        if (http.getResponseCode() == HttpConnection.HTTP_OK) {
-            System.out.println("200!");
-            //System.out.println(http.getResponseMessage());
-        } else {
-            System.out.println(http.getResponseCode());
-        }
-//        InputStream is=http.openInputStream();
-//        if(is!=null){
-//            System.out.println("is != null");
-//        }else{
-//            System.out.println("is == null");
-//        }
+        HttpWorker http=new HttpWorker();
+        return http.sendRequest(MainScreen.HOST, xml);
     }
 }
