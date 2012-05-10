@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- *** GENERATED FROM project.xml - DO NOT EDIT *** -->
-<project name="test-impl" default="jar" basedir="..">
+<?xml version="1.0" encoding="UTF-8"?><!-- *** GENERATED FROM project.xml - DO NOT EDIT *** --><project name="Discount-impl" default="jar" basedir="..">
     <!--load-properties-->
     <target name="pre-load-properties">
         <property file="nbproject/private/private.properties"/>

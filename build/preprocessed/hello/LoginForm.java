@@ -37,9 +37,9 @@ public class LoginForm extends Form implements CommandListener {
 
         setCommandListener(this);
 
-        addCommand(new Command("Enter", Command.OK, 1));
+        addCommand(new Command("Авторизоваться", Command.OK, 1));
 
-        addCommand(new Command("Exit", Command.EXIT, 1));
+        addCommand(new Command("Выйти", Command.EXIT, 1));
     }
 
     public void commandAction(Command c, Displayable d) {
@@ -58,6 +58,13 @@ public class LoginForm extends Form implements CommandListener {
     private void initAuth() {
         String loginString = login.getString();
         String passwordString = password.getString();
+        
+        if(loginString.equals("")||passwordString.equals("")){
+            statusLine.setText("Пожалуйста, введите учетные данные полностью!");
+            return;
+        }else{
+            statusLine.setText("Выполняется запрос...");
+        }
 
         String[] nodes = {"type", "user", "pass"};
         String[] values = {"bonuslogin", loginString, passwordString};

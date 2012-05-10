@@ -28,7 +28,7 @@ public class ActionForm extends Form implements CommandListener {
         this.session = session;
 
         sum = new TextField("Сумма:", "", 10, TextField.NUMERIC);
-        code = new TextField("Акционный код:", "", 10, TextField.ANY);
+        code = new TextField("Акционный код:", "", 10, TextField.NUMERIC);
         statusLine=new StringItem("", "");
         
         append(sum);
@@ -37,9 +37,9 @@ public class ActionForm extends Form implements CommandListener {
 
         setCommandListener(this);
 
-        addCommand(new Command("Enter", Command.OK, 1));
+        addCommand(new Command("Отправить", Command.OK, 1));
 
-        addCommand(new Command("Exit", Command.EXIT, 1));
+        addCommand(new Command("Выйти", Command.EXIT, 1));
     }
 
     public void commandAction(Command c, Displayable d) {
@@ -56,8 +56,15 @@ public class ActionForm extends Form implements CommandListener {
     }
 
     private void sendCode() {
-        String sumString = sum.getString();
-        String codeString = code.getString();
+        String sumString = sum.getString().trim();
+        String codeString = code.getString().trim();
+        
+        if(sumString.equals("")||codeString.equals("")){
+            statusLine.setText("Пожалуйста, заполните все поля!");
+            return;
+        }else{
+            statusLine.setText("Выполняется запрос...");
+        }
 
         String[] nodes = {"type", "id_kassi", "summa", "code", "sessions"};
         String[] values = {"bonususes", session.getIdKassi(), sumString, codeString, session.getSessionHash()};
