@@ -17,7 +17,7 @@ import javax.microedition.lcdui.*;
  */
 public class LoginForm extends Form implements CommandListener {
 
-    private final static String title = "Авторизуйтесь, пожалуйста";
+    private final static String title = "Авторизуйтесь";
     private MainScreen root;
     private TextField login;
     private TextField password;
@@ -56,13 +56,13 @@ public class LoginForm extends Form implements CommandListener {
     }
 
     private void initAuth() {
-        String loginString = login.getString();
-        String passwordString = password.getString();
-        
-        if(loginString.equals("")||passwordString.equals("")){
+        String loginString = login.getString().trim();
+        String passwordString = password.getString().trim();
+
+        if (loginString.equals("") || passwordString.equals("")) {
             statusLine.setText("Пожалуйста, введите учетные данные полностью!");
             return;
-        }else{
+        } else {
             statusLine.setText("Выполняется запрос...");
         }
 
@@ -71,6 +71,7 @@ public class LoginForm extends Form implements CommandListener {
 
         XMLHelper helper = new XMLHelper();
         String xml = helper.generateXML("request", nodes, values);
+
 
         try {
             String response = sendPostRequest(xml);
@@ -87,6 +88,9 @@ public class LoginForm extends Form implements CommandListener {
             ex.printStackTrace();
             statusLine.setText("Ошибка связи с сервером!");
         }
+
+
+
     }
 
     private Session parseServerResponse(String rawXML) {
@@ -123,7 +127,7 @@ public class LoginForm extends Form implements CommandListener {
 
     private String sendPostRequest(String xml) throws IOException {
 
-        HttpWorker http=new HttpWorker();
+        HttpWorker http = new HttpWorker();
         return http.sendRequest(MainScreen.HOST, xml);
     }
 }
