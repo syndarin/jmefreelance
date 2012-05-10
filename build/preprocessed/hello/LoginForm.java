@@ -15,7 +15,7 @@ import javax.microedition.lcdui.*;
  *
  * @author Syndarin
  */
-public class LoginForm extends Form implements CommandListener {
+public class LoginForm extends Form implements CommandListener, HttpWorker.HttpListener {
 
     private final static String title = "Авторизуйтесь";
     private MainScreen root;
@@ -72,24 +72,7 @@ public class LoginForm extends Form implements CommandListener {
         XMLHelper helper = new XMLHelper();
         String xml = helper.generateXML("request", nodes, values);
 
-
-        try {
-            String response = sendPostRequest(xml);
-            Session session = parseServerResponse(response);
-
-            if (session.getStatus() != 1) {
-                statusLine.setText("Вы успешно авторизованы!");
-                root.setActionPage(session);
-            } else {
-                statusLine.setText("Неправильные учетные данные!");
-            }
-
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            statusLine.setText("Ошибка связи с сервером!");
-        }
-
-
+        sendPostRequest(xml);
 
     }
 
@@ -125,9 +108,25 @@ public class LoginForm extends Form implements CommandListener {
         return session;
     }
 
-    private String sendPostRequest(String xml) throws IOException {
+    private void sendPostRequest(String xml) {
 
-        HttpWorker http = new HttpWorker();
-        return http.sendRequest(MainScreen.HOST, xml);
+        HttpWorker http = new HttpWorker(MainScreen.HOST, xml, this);
+        Thread t=new Thread(http);
+        t.start();
+    }
+
+    public void onRequestSuccess(String answer) {
+        Session session = parseServerResponse(answer);
+
+        if (session.getStatus() != 1) {
+            statusLine.setText("Вы успешно авторизованы!");
+            root.setActionPage(session);
+        } else {
+            statusLine.setText("Неправильные учетные данные!");
+        }
+    }
+
+    public void onRequestFailed(String error) {
+        statusLine.setText(error);
     }
 }

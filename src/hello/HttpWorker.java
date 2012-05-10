@@ -14,7 +14,17 @@ import javax.microedition.io.HttpConnection;
  *
  * @author Syndarin
  */
-public class HttpWorker {
+public class HttpWorker implements Runnable{
+
+    String host;
+    String xml;
+    HttpListener listener;
+
+    public HttpWorker(String host, String xml, HttpListener listener) {
+        this.host = host;
+        this.xml = xml;
+        this.listener = listener;
+    }
 
     public String sendRequest(String host, String xml) throws IOException {
         DataInputStream dis = null;
@@ -44,10 +54,8 @@ public class HttpWorker {
         dos.close();
         http.close();
 
-        System.out.println(responseMessage.toString());//*******************************************************
         String s1251=responseMessage.toString();
         String utf=decodeCp1251(s1251.getBytes());
-        System.out.println(utf);//*******************************************************
         return utf;
     }
 
@@ -95,4 +103,19 @@ public class HttpWorker {
         '\u0440', '\u0441', '\u0442', '\u0443', '\u0444', '\u0445', '\u0446', '\u0447',
         '\u0448', '\u0449', '\u044A', '\u044B', '\u044C', '\u044D', '\u044E', '\u044F'
     };
+
+    public void run() {
+        try {
+            String response=sendRequest(host, xml);
+            listener.onRequestSuccess(response);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            listener.onRequestFailed("Ошибка соединения!");
+        }
+    }
+    
+    public interface HttpListener{
+        void onRequestSuccess(String answer);
+        void onRequestFailed(String error);
+    }
 }

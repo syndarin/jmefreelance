@@ -13,7 +13,7 @@ import javax.microedition.lcdui.*;
  *
  * @author Syndarin
  */
-public class ActionForm extends Form implements CommandListener {
+public class ActionForm extends Form implements CommandListener, HttpWorker.HttpListener {
 
     private final static String title = "Введите код";
     private MainScreen root;
@@ -29,8 +29,8 @@ public class ActionForm extends Form implements CommandListener {
 
         sum = new TextField("Сумма:", "", 10, TextField.NUMERIC);
         code = new TextField("Акционный код:", "", 10, TextField.NUMERIC);
-        statusLine=new StringItem("", "");
-        
+        statusLine = new StringItem("", "");
+
         append(sum);
         append(code);
         append(statusLine);
@@ -58,11 +58,11 @@ public class ActionForm extends Form implements CommandListener {
     private void sendCode() {
         String sumString = sum.getString().trim();
         String codeString = code.getString().trim();
-        
-        if(sumString.equals("")||codeString.equals("")){
+
+        if (sumString.equals("") || codeString.equals("")) {
             statusLine.setText("Пожалуйста, заполните все поля!");
             return;
-        }else{
+        } else {
             statusLine.setText("Выполняется запрос...");
         }
 
@@ -72,26 +72,14 @@ public class ActionForm extends Form implements CommandListener {
         XMLHelper helper = new XMLHelper();
         String requestXml = helper.generateXML("request", nodes, values);
 
-        try {
-            String answer = sendRequest(requestXml);
-            CodeResponse response = parseResponse(answer);
-            
-            if(response.getStatus()==0){
-                statusLine.setText("Сумма с учетом скидки "+response.getPercent()+"% - "+response.getSum());
-            }else{
-                statusLine.setText(response.getText());
-            }
-            
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            statusLine.setText("Ошибка соединения с сервером!");
-        }
+        sendRequest(requestXml);
     }
 
-    private String sendRequest(String xml) throws IOException {
+    private void sendRequest(String xml) {
 
-        HttpWorker http=new HttpWorker();
-        return http.sendRequest(MainScreen.HOST, xml);
+        HttpWorker http = new HttpWorker(MainScreen.HOST, xml, this);
+        Thread t = new Thread(http);
+        t.start();
     }
 
     private CodeResponse parseResponse(String xml) {
@@ -125,5 +113,19 @@ public class ActionForm extends Form implements CommandListener {
         }
 
         return response;
+    }
+
+    public void onRequestSuccess(String answer) {
+        CodeResponse response = parseResponse(answer);
+
+        if (response.getStatus() == 0) {
+            statusLine.setText("Сумма с учетом скидки " + response.getPercent() + "% - " + response.getSum());
+        } else {
+            statusLine.setText(response.getText());
+        }
+    }
+
+    public void onRequestFailed(String error) {
+        statusLine.setText(error);
     }
 }
